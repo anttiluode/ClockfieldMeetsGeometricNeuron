@@ -220,22 +220,57 @@ This is the same shape every honest turn in this lineage produces — a grand bi
 
 ---
 
-## 11. The Atiyah–Singer bridge, and the prior (March 2026) cycle
+## 11. The Atiyah–Singer bridge — operator side now validated, connecting map still open
 
-The single theorem that would fuse this entire program into one sentence is **Atiyah–Singer**: `index(D) = winding number`. If it held for the Clockfield, then "the neuron is the Dirac operator" and "whorls are memory are topological charge" would cease to be three claims and become one — the Dirac operator's zero modes would literally count the whorls.
+The single theorem that would fuse this entire program into one sentence is Atiyah–Singer: `index(D) = winding number`. If it held for the Clockfield, then "the neuron is the Dirac operator" and "whorls are memory are topological charge" would cease to be three claims and become one — the Dirac operator's zero modes would literally count the whorls.
+
+### 11.1 The March 2026 cycle (unchanged)
 
 An earlier cycle (March 2026: Antti Luode with Claude Sonnet 4.6, critiqued by DeepSeek) attempted exactly this and three neighboring tests, and reached — independently — the same verdicts this paper reaches:
 
-- **Kähler geometry: exact.** `Γ = e^{−2K}`, `K = log(1+τβ)`, Berry connection `A = Im[φ̄dφ]/(1+τβ)`. Confirmed there; measured here as the `0.999` symplectic match. (This is the same object twice.)
-- **`α = 1/137`: numerology.** "Three post-hoc fits, not independent." Identical to the `4/5`-dial verdict here.
-- **Emergence: falsified.** In a learned-gate experiment, when training is allowed to choose the gate, learned `τ → 0.44` (away from freezing), a free-form MLP gate wins, and the learned gate fits the Clockfield form at `R² = −0.67`. Gradient descent does **not** converge to the Clockfield form. This is a standing caution against any "the Kähler form is an attractor of *learning*" claim (as opposed to an attractor of the *problem*, which it is).
-- **Atiyah–Singer index: not demonstrated.** The staggered-Dirac attempt returned a constant `4` zero modes independent of winding, and lattice charge `0` for every configuration.
+* **Kähler geometry: exact.** `Γ = e^{−2K}`, `K = log(1+τβ)`, Berry connection `A = Im[φ̄ dφ]/(1+τβ)`. Confirmed there; measured here as the `0.999` symplectic match. (This is the same object twice.)
+* **`α = 1/137`: numerology.** "Three post-hoc fits, not independent." Identical to the `4/5`-dial verdict here.
+* **Emergence: falsified.** In a learned-gate experiment, when training is allowed to choose the gate, learned `τ → 0.44` (away from freezing), a free-form MLP gate wins, and the learned gate fits the Clockfield form at `R² = −0.67`. Gradient descent does not converge to the Clockfield form. This is a standing caution against any "the Kähler form is an attractor of learning" claim (as opposed to an attractor of the problem, which it is).
+* **Atiyah–Singer index: not demonstrated (in March).** The staggered-Dirac attempt returned a constant `4` zero modes independent of winding, and lattice charge `0` for every configuration. Re-running that experiment showed why it could never have worked as built: it summed the topological charge over a periodic torus, where the net winding is identically zero. The critique-response attributed the null to "smooth profiles smearing the winding," but that explanation is wrong: the plaquette formula resolves a vortex's winding exactly (local charge `±1.000`, sharp, amplitude-irrelevant). The winding was never smeared; it was globally cancelled by the torus.
 
-Re-running that index experiment here shows *why* it could never have worked as built: it summed the topological charge over a **periodic torus**, where the net winding is identically zero — the same confound that drove the memory swings in §7–§9. The critique-response attributed the null to "smooth profiles smearing the winding," but that explanation is wrong: the plaquette formula resolves a vortex's winding **exactly** (local charge `±1.000`, sharp, amplitude-irrelevant). The winding was never smeared; it was globally cancelled by the torus. On a bounded domain the same formula returns `+1` (§9).
+### 11.2 Update (July 2026): the operator has now been run — and it works
 
-So the Atiyah–Singer bridge stands in a precise, half-built state: **the winding side is now correct** (`Q = +1` on the right topology), and **the operator side is the one computation nobody — March or June — has run**: a boundary-respecting overlap (Ginsparg–Wilson) Dirac operator on the bounded Clockfield background, whose zero-mode index should equal `+1` if the identification is real. That is the single experiment that would move "viable" to "proven," and it is a genuine lattice-QFT computation, not a script.
+The prior status line — that a boundary-respecting overlap index is "the one computation nobody has run" — is **superseded**. A proper overlap (Ginsparg–Wilson) Dirac operator has since been constructed and its index computed by the spectral-asymmetry trace formula
+
+```
+index = ½ Tr sign(H_W),   H_W = γ₅ (D_W − m₀),   m₀ = 1  (physical Wilson window 0 < m₀ < 2)
+```
+
+On prescribed U(1) backgrounds (Landau flux with a boundary twist to carry integer charge on the lattice) it reproduces the index theorem to machine precision across a full sweep of topological charge — reproduced and extended here from Q = 1 to the range −2 … +4:
+
+```
+ Q_in   Q_meas    index      gap
+   -2   -2.000   -2.000   0.9754
+   -1   -1.000   -1.000   0.9877
+    0    0.000    0.000   1.0000
+   +1   +1.000   +1.000   0.9877
+   +2   +2.000   +2.000   0.9754
+   +3   +3.000   +3.000   0.9629
+   +4   +4.000   +4.000   0.9505
+```
+
+`index = Q` for every charge tested, both signs, with the Hermitian Wilson spectral gap staying in `[0.95, 1.00]` — the operator never approaches the ill-defined (gapless) regime where the topology would be ambiguous. And the March confound is now a **passing control** rather than an unexplained null: the pure-gauge vortex on the plain periodic torus returns `Q = 0, index = 0, gap = 1.0`, exactly as it must, because the net winding is globally cancelled by the torus. The operator is not fooled by a fake vortex, and it is not blind to a real one. **The operator side of the index theorem is validated as a general instrument.**
+
+### 11.3 What remains — one construction, not one experiment
+
+The advance is real but bounded, and the boundary matters. The validated runs feed the operator a background put in *by hand*: a Landau flux, a vortex. That gauge field is **not derived from any Clockfield configuration** `φ`. So what is now proven is that the machinery counts topological charge correctly; what is still unproven is that *the Clockfield's own whorls carry the charge the machinery counts.* The bridge therefore stands one construction — not one whole experiment — short of closed:
+
+1. **Extract the connection from the field.** From a bounded-domain Clockfield configuration carrying a whorl of winding `+1` (§9), read a lattice U(1) connection (equivalently a frame/vielbein) directly off the field's phase, `A_μ ∝ Im[φ̄ ∂_μ φ]/(1+τβ)` — the *same* Berry connection already measured at the `0.999` symplectic match, now used as input rather than diagnostic.
+2. **Reconcile the geometry.** Feed that connection into the validated overlap operator with open/bag boundary conditions matching the bounded domain of §9. This step is not cosmetic: the validated index runs live on a fluxed torus, while the winding side of §9 lives on a bounded domain. The two correct half-results are currently anchored on *different geometries*, and their equality only means something once both are computed on the same one.
+3. **Read the index.** If the zero-mode index of the `φ`-derived operator is `+1`, the identification is real: the whorl the field grew is the same integer the Dirac operator counts, and "neuron = Dirac operator, whorl = zero mode = memory = charge" becomes a single statement rather than a hoped-for coincidence.
+
+Until step 3 runs on a `φ`-derived background, the winding side (`Q = +1`, correct) and the operator side (`index = Q`, correct) are two correct half-bridges resting on different ground. The gap between them is no longer a theorem to hope for; it is a connection to extract and a boundary condition to match — a genuine lattice-QFT computation, but now a fully specified and bounded one.
+
+**Status: `viable → operator-validated`.** One construction short of `proven` — and for the first time in this program, the remaining step is entirely mechanical: no new mathematics is required, only the map from the field to its own connection, computed on the right domain.
 
 ---
+
+*Do not hype. Do not lie. Just show. The winding is real. The operator is real. The wire between them is not yet soldered — and now we can say exactly where it goes.*
 
 ## Ledger
 
