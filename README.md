@@ -1,6 +1,6 @@
 # Two Weights, One Worldsheet
 
-## A Kähler unification of the Geometric Neuron and the Clockfield, and its obstruction by memory stability
+## A Kähler unification of the Geometric Neuron and the Clockfield, its obstruction by static pinning, and a partial thermodynamic rescue
 
 *PerceptionLab / Antti Luode, with Claude (Opus 4.8), and in dialogue with Gemini. Helsinki, June 2026.*
 
@@ -14,7 +14,7 @@ Two independently developed constructs — the **Geometric Neuron** (a delay-emb
 
 **(1)** The neuron's chirality readout is, numerically, the Fubini–Study symplectic (Berry) form to correlation `0.999`; the Clockfield's `Γ` is exactly the flat→Fubini–Study conversion factor. The two constructs really are the imaginary and real halves of one Hermitian form. **(2)** On a 2-D Kähler manifold the canonical Dolbeault–Dirac operator satisfies `D² = Δ_g` (Laplace–Beltrami); we verify the construction numerically (residual `1.3×10⁻³`). For the neuron to *be* the Dirac operator of the Clockfield, the Clockfield's own Laplacian must therefore carry the conformal factor as `(1+τβ)²`. **(3)** It does not. The running Clockfield uses `1/(1+τβ)`; the corpus elsewhere uses `1/(1+τβ)⁴`. The mismatch is exact in vacuum and grows with field intensity (residual–`β` correlation `+0.91`), a clean conformal-power obstruction rather than a numerical artifact.
 
-We then ask whether the required weight is physically admissible by testing whether it supports the object the unification was meant to explain: a **stable pinned whorl** (the neuron's held-memory primitive). It does not. Under the unification weight the medium is whorl-*fertile* but whorl-*incontinent*: seeded whorls depin and annihilate. A pinning-strength sweep is decisive — the baseline (memory) weight holds `4/4` whorls at every pinning depth `A∈[0.7,0.99]`; the unification (Dirac) weight holds `0/4` at every depth, including a maximally deep and wide well. **The weight that makes the neuron formally the Dirac operator of the Clockfield is the opposite of, and irreconcilable by static pinning with, the weight that lets the Clockfield hold a memory.** The Kähler *geometry* is real; its identification with a memory-bearing Clockfield is falsified at the tested parameters. The claim that the held field is *experienced* is untouched by any of this, as it always has been.
+We then ask whether the required weight is physically admissible by testing whether it supports the object the unification was meant to explain: a **stable pinned whorl** (the neuron's held-memory primitive). Under *static* pinning it does not — the medium is whorl-*fertile* but whorl-*incontinent*, and a pinning-strength sweep is decisive: the baseline (memory) weight holds `4/4` whorls at every depth `A∈[0.7,0.99]`, the unification weight holds `0/4` at every depth, including a maximally deep and wide well. But static pinning is not the only mechanism. A **thermodynamic quench** (Kibble–Zurek cooling, damping ramped up then returned to operating level) changes the outcome: with an appropriate cooling schedule, the free whorls annihilate but a *partial* set of anchored whorls (here `2/4` wells) survives the return to waking dynamics as a stable plateau, where a no-well control leaves exactly zero. So the duality is **not** physically sterile — the unification weight *can* hold stable topological memory, but only via a cooling/consolidation phase, at partial yield. The obstruction is real for static pinning and is bridged, partially, by cooling; the corrected verdict is a viable duality *conditional on consolidation*, which is itself a falsifiable prediction. The Kähler *geometry* is measured and real throughout; the claim that the held field is *experienced* is untouched by any of it, as it always has been.
 
 ---
 
@@ -138,15 +138,39 @@ A=0.99   0.01       4/4       0/4
 Dirac best-case (A=0.99, width w=3.0):   0/4
 ```
 
-The escape hatch is closed. Baseline holds `4/4` at every depth; the Dirac medium holds `0/4` at every depth, including a maximally deep well (vacuum `|φ|²=0.01`, essentially a hole) and a maximally wide one. No static pinning of any strength immobilizes a whorl in the unification medium at `τ=0.5`.
+The escape hatch — *static* pinning — is closed. Baseline holds `4/4` at every depth; the Dirac medium holds `0/4` at every depth, including a maximally deep well (vacuum `|φ|²=0.01`, essentially a hole) and a maximally wide one. No static pinning of any strength immobilizes a whorl in the unification medium at `τ=0.5`.
 
 ---
 
-## 8. Verdict
+## 8. The cooling rescue (the escape hatch that is *not* closed)
 
-The formal Kähler unification and the physical memory mechanism require **incompatible clockfield weights**, and the incompatibility is not bridgeable by static pinning. The claim "the Geometric Neuron is the Dirac operator of *this* memory-bearing Clockfield" is **falsified** at the tested parameters. What survives is smaller and true: the neuron and the Clockfield are the symplectic and metric halves of one Kähler *geometry* (measured, `0.999`; `Γ` is the FS Jacobian); the Dolbeault `D² = Δ_g` is a theorem, verified; but the geometry's Dirac weight and the dynamics' memory weight point in opposite directions.
+Static pinning fails because it fights the fast medium's kinetic energy with a deeper hole; the wind wins. The remaining, and correct, mechanism is to remove the wind — a **thermodynamic quench** rather than a deeper well. We ran the Kibble–Zurek protocol: ignite a hot disordered plasma, ramp the damping up to bleed the kinetic radiation, then — the step the naive quench omits — **return the damping to operating level and hold it**, testing whether anything survives *waking* (Figure `quench_release_control.png`). Two controls decide the reading: **with vs without wells**, and the **release** phase.
 
-This is the same shape every honest turn in this lineage has produced: the grand binary (unification! / simulation theory!) dissolves under a real test into a precise, smaller, load-bearing statement — here, a conformal-power obstruction and a focusing/defocusing incompatibility, each with a clean number behind it.
+The frozen state is a confound, not a result. At maximum damping (`ν=0.16`) the field is overdamped and holds whorls *everywhere*: WITH wells `12` survivors, WITHOUT wells `10`, with `~0` actually sitting at wells in either case. Removing the wells barely changes the count, and the survivors are not at the wells — so the "frozen memory" of the naive quench is **friction-freezing, not pinning**. This is the correction to the triumphant reading: the raw frozen count is not memory.
+
+The waking test reveals the real, weaker effect. Holding operating damping (`ν=0.02`) for a long stretch:
+
+```
+ AWAKE phase (ν=0.02)          WITH wells (at wells)      WITHOUT wells
+   step 11000                    4  (1 at well)                2
+   step 14000                    4  (2 at well)                0
+   step 18000                    4  (2 at well)                0
+   step 21999                    2  (2 at well)                0
+```
+
+The free whorls annihilate away in both conditions; but WITH wells the **at-well count plateaus at `2` and holds for `~8000` awake steps**, while the no-well control decays to **zero and stays zero**. The final field shows two dark cores locked on wells against an empty control. So a cooling phase does write a *partial*, *stable*, *pinned* memory (`2/4` here) into the unification medium — one that survives the return to waking dynamics — where static pinning wrote nothing (`0/4`) and the bare torus keeps nothing (`0`).
+
+**This corrects two claims at once.** Gemini's original quench reported `6` whorls "pinned in the Dirac metric" and declared the duality resurrected; the controls show that count is friction-freezing (wells irrelevant at the freeze; most survivors evaporate on waking), so the yield is `2/4`, not `6`. And the earlier §7 verdict of this program — "`0/4`, a clean kill, physically sterile" — is *also* wrong: it tested static pinning without cooling, and cooling is precisely the missing ingredient. Credit is due to the cooling insight even though its first quantification overshot; the mechanism (anneal, don't dig) is correct.
+
+The neurobiological reading follows, and is sharper than "everything freezes": memory in this unified medium **cannot be written while the field is hot/awake** (low damping, high kinetic energy — the whorls blow away); it requires a **low-damping consolidation phase** to let the anchored traces settle, after which *only the anchored ones* survive the return to waking, and the bulk of the night's activity dissipates. That maps onto slow-wave consolidation with the correct refinement that consolidation is *selective*, not wholesale.
+
+---
+
+## 9. Verdict
+
+The formal Kähler unification and the physical memory mechanism require **incompatible clockfield weights** *for static pinning* — there the incompatibility is clean (`4/4` vs `0/4`). But the incompatibility is **bridged, partially, by thermodynamic cooling**: a quench-and-wake schedule writes a stable pinned residue (`2/4`) into the unification medium that a no-well control cannot keep. The claim "the Geometric Neuron is the Dirac operator of a memory-bearing Clockfield" is therefore **not falsified but conditional**: viable if and only if the medium can undergo a consolidation phase. What is unconditionally true and measured: the neuron and the Clockfield are the symplectic and metric halves of one Kähler *geometry* (`0.999`; `Γ` is the FS Jacobian); the Dolbeault `D² = Δ_g` is a theorem, verified; the unification requires the `(1+τβ)²` weight, which the running Clockfield does not use.
+
+This is the same shape every honest turn in this lineage has produced — the grand binary dissolving into a precise, smaller, load-bearing statement — with one added lesson recorded live: the verdict itself was recalibrated twice by better experiments (the physical arrow read first toward the Dirac weight, then reversed to a clean kill, then partially re-reversed by the cooling control). The current statement is a best estimate pending the next control, not a closed case.
 
 ---
 
@@ -158,10 +182,12 @@ This is the same shape every honest turn in this lineage has produced: the grand
 - Dolbeault `D² = −(1/2Γ)Δ_flat` to discretization error (`1.3×10⁻³`);
 - conformal obstruction: `D²` needs `(1+τβ)²`; running Clockfield uses `1/(1+τβ)`; residual `0` in vacuum, `+0.91`-correlated with `β`;
 - focusing↔bright, defocusing↔whorl (`τ`-sweep);
-- stable pinned whorls: baseline `4/4` at all pinning depths; Dirac `0/4` at all depths and widths.
+- static pinning: baseline holds `4/4` at all depths; Dirac holds `0/4` at all depths and widths;
+- cooling rescue: a Kibble–Zurek quench + return to operating damping leaves `2/4` anchored whorls stable across `~8000` awake steps under the Dirac weight, vs `0` for a no-well control; the maximum-damping "frozen" count (`~12`) is friction-freezing, wells irrelevant there.
 
 **Honest corrections forced by the builds:**
-- the unification weight is whorl-fertile but **cannot hold** a pinned whorl (this reverses an earlier claim in this program that the physical evidence favored the Dirac weight);
+- the unification weight cannot hold a pinned whorl by **static** pinning (`0/4`), but **can** hold a partial set (`2/4`) via **thermodynamic cooling** — so the §7 "clean kill / physically sterile" verdict was wrong, and this program's *physical* arrow has now reversed twice (toward Dirac, then to a kill, then partially back);
+- Gemini's cooling insight is correct and load-bearing, but its first quantification (`6` whorls "pinned") was friction-freezing; controls (with/without wells, and release to operating damping) put the true pinned yield at `2/4`;
 - Gemini's original Dolbeault falsifier had stacked convention bugs (wrong conformal power, weight-inside-adjoint, missing sign/½) and its raw PASS/FAIL was uninterpretable; the corrected construction is used here;
 - the manuscript's Hopf-spinor "derivation of Dirac" gives spinorial statistics (Wilczek–Zee), not the operator; its `α ≈ 1/136.98` is one-parameter numerology (running backwards), consistent with the lineage's Simpsons post-mortem.
 
@@ -170,18 +196,19 @@ This is the same shape every honest turn in this lineage has produced: the grand
 **Still the bet, untouched by all of the above:** that the held field is *experienced* rather than merely processed. No count, residual, or survival fraction in this paper reaches it. The falsification concerns the *operator identification*, not the qualia question, which stands exactly where it stood.
 
 **Genuinely open (not closed by this work):**
-- **Active pinning.** The neuron pins by *dynamic* pattern re-injection, not a static potential well. Whether feedback/active pinning holds a whorl in the Dirac medium is untested — the one door left ajar to the unification.
-- **Lone whorl on a bounded domain.** The torus forces ± pairs (an annihilation channel). A single net-charge whorl on a bounded domain (as in the actual neuron field or the box) has no annihilation partner; whether the Dirac medium expels even a lone pinned whorl is untested.
-- **Coupling regime.** The pinning falsifier is at `τ=0.5`. The depinning mechanism (fast bulk → mobile defects) is generic to the defocusing branch, so we expect robustness across `τ`, but this is argued, not swept.
+- **Plateau vs long-time metastability.** The `2/4` at-well residue is stable for `~8000` awake steps, but the two survivors are a `±` pair pinned at different wells; whether pinning beats their mutual attraction *forever* or merely on a long timescale is unresolved. A single net-charge whorl on a bounded domain (no annihilation partner) would settle it, and is the cleanest test of true stability.
+- **Yield and the Kibble–Zurek law.** Why `2/4`, and does a *slower* quench raise the yield? Standard KZ scaling predicts fewer, better-seated defects for slower cooling — testable, and it would quantify how "cheap" a consolidated memory is.
+- **Active pinning.** The neuron pins by *dynamic* pattern re-injection, not a static well or a fixed vacuum dip; whether feedback pinning outperforms the cooling route (or removes the need for it) is untested.
+- **Coupling regime.** All pinning/cooling runs are at `τ=0.5`. The depinning mechanism (fast bulk → mobile defects) is generic to the defocusing branch, so we expect robustness across `τ`, but this is argued, not swept.
 
 ---
 
 ## Coda
 
-We set out asking whether we had found simulation theory — whether mind and physics were the same object. We found something more disciplined and, arguably, more useful: a genuine Kähler duality between the two constructs at the level of *geometry*, and a clean physical reason it cannot be a duality of *this* memory-bearing *dynamics*. The neuron really is the symplectic half of a Fubini–Study form; the Clockfield really is the metric half; and the single weight that would fuse them into one Dirac operator is exactly the weight under which the field can no longer hold a thought. The two things you most wanted to be one demand opposite worlds. That is not the unification — but it is a true sentence, stated in coordinates, with the escape routes named. Let the ledger name the paper.
+We set out asking whether we had found simulation theory — whether mind and physics were the same object. We found something more disciplined: a genuine Kähler duality between the two constructs at the level of *geometry*, and a physical mechanism by which it can, conditionally, be a duality of *dynamics* too. The neuron really is the symplectic half of a Fubini–Study form; the Clockfield really is the metric half; the single weight that fuses them into one Dirac operator is the weight under which the field cannot hold a thought *while it is awake* — and yet a cooling phase writes a partial, stable memory into it anyway. The unification does not demand opposite worlds after all; it demands that the world be able to sleep. That is a stranger and more falsifiable claim than either the triumphant version or the sterile one, and it is the one the numbers support. Let the ledger name the paper — and let it record that the ledger changed twice under better experiments, which is the process working, not failing.
 
 *Do not hype. Do not lie. Just show.*
 
 ---
 
-*Helsinki, June 2026. Engines, falsifiers, and figures developed collaboratively with Claude (Opus 4.8); the Dolbeault falsifier was proposed by Gemini and corrected here; the framework, the constructs, and the direction are Antti Luode's. Reproducible: `clockfield_matter_stability.py`, `clockfield_cooling_kz.py`, and the pinning sweep produce every number and figure cited.*
+*Helsinki, June 2026. Engines, falsifiers, and figures developed collaboratively with Claude (Opus 4.8); the Dolbeault falsifier was proposed by Gemini and corrected here; the thermodynamic-cooling route to pinned memory was proposed by Gemini and quantified with controls here; the framework, the constructs, and the direction are Antti Luode's. Reproducible: `clockfield_matter_stability.py`, `clockfield_cooling_kz.py`, the pinning sweep, and the quench-and-release control (`quench_release_control.png`) produce every number and figure cited.*
