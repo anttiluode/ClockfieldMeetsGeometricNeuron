@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>GENESIS BOX — 3D</title>
+<style>
+  :root{
+    --bg:#05070c; --ink:#c7d0dc; --dim:#5c6b80; --amber:#e0a838; --line:#141b28;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);overflow:hidden;
+    font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;color:var(--ink)}
+  #gl{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab}
+  #gl:active{cursor:grabbing}
+  .panel{position:fixed;background:rgba(8,11,18,.72);border:1px solid var(--line);
+    backdrop-filter:blur(3px);padding:14px 16px;border-radius:4px;font-size:12px;letter-spacing:.04em}
+  /* top-left instrument readout */
+  #hud{top:14px;left:14px;min-width:430px;line-height:1.9}
+  #hud .ttl{color:var(--amber);letter-spacing:.22em;font-size:11px;margin-bottom:6px}
+  #hud .row{display:flex;justify-content:space-between}
+  #hud .k{color:var(--dim)} #hud .v{color:var(--ink)}
+  #hud .note{color:var(--dim);margin-top:8px;font-size:11px;line-height:1.6}
+  /* top-right fps */
+  #fps{top:14px;right:14px;color:var(--amber);letter-spacing:.22em;font-size:11px;padding:8px 12px}
+  /* bottom controls */
+  #ctl{left:14px;bottom:14px;display:flex;gap:22px;align-items:flex-end;flex-wrap:wrap;max-width:calc(100vw - 28px)}
+  .sl{display:flex;flex-direction:column;gap:6px;min-width:120px}
+  .sl label{color:var(--dim);font-size:11px;letter-spacing:.1em;display:flex;justify-content:space-between}
+  .sl label b{color:var(--ink);font-weight:400}
+  input[type=range]{-webkit-appearance:none;appearance:none;height:3px;background:var(--line);border-radius:3px;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;
+    background:var(--amber);cursor:pointer;box-shadow:0 0 6px rgba(224,168,56,.6)}
+  input[type=range]::-moz-range-thumb{width:12px;height:12px;border:none;border-radius:50%;background:var(--amber);cursor:pointer}
+  .btns{display:flex;gap:10px}
+  button{background:transparent;border:1px solid var(--line);color:var(--ink);font-family:inherit;
+    font-size:11px;letter-spacing:.12em;padding:9px 13px;border-radius:3px;cursor:pointer;transition:.15s}
+  button:hover{border-color:var(--amber);color:var(--amber)}
+  button.on{border-color:var(--amber);color:var(--amber)}
+  #cam{position:fixed;right:14px;bottom:14px;color:var(--dim);font-size:11px;letter-spacing:.06em}
+  #cam .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#3a6;margin-right:6px;vertical-align:middle}
+  #cam.off .dot{background:#633}
+  video{display:none}
+  #err{position:fixed;inset:0;display:none;place-items:center;color:#e08;font-size:14px;text-align:center;padding:40px}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<video id="vid" playsinline muted></video>
+
+<div class="panel" id="hud">
+  <div class="ttl">GENESIS BOX · 3D</div>
+  <div class="row"><span class="k">species</span><span class="v" id="mSpecies">0</span></div>
+  <div class="row"><span class="k">field energy</span><span class="v" id="mEnergy">0.00</span></div>
+  <div class="row"><span class="k">matter</span><span class="v" id="mMatter">0</span></div>
+  <div class="row"><span class="k">infall / s</span><span class="v" id="mInfall">0</span></div>
+  <div class="note">light condenses into mass · gravity is a particle-mesh Poisson solve on a 40³ periodic grid · clumps that persist earn a species id</div>
+</div>
+
+<div class="panel" id="fps">– FPS</div>
+
+<div class="panel" id="ctl">
+  <div class="sl"><label>infall <b id="vInfall">1.50</b></label><input id="sInfall" type="range" min="0" max="4" step="0.05" value="1.5"></div>
+  <div class="sl"><label>gravity <b id="vGrav">3.00</b></label><input id="sGrav" type="range" min="0" max="8" step="0.05" value="3.0"></div>
+  <div class="sl"><label>cooling <b id="vCool">0.120</b></label><input id="sCool" type="range" min="0" max="0.5" step="0.005" value="0.12"></div>
+  <div class="sl"><label>softening <b id="vSoft">3.0</b></label><input id="sSoft" type="range" min="0" max="6" step="1" value="3"></div>
+  <div class="btns">
+    <button id="bCam">USE WEBCAM</button>
+    <button id="bReset">RESET FIELD</button>
+  </div>
+</div>
+
+<div id="cam" class="off"><span class="dot"></span><span id="camLbl">no camera — seeding from noise</span></div>
+<div id="err"></div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const cv=$("gl"), gl=cv.getContext("webgl2",{antialias:false,alpha:false,premultipliedAlpha:false});
+if(!gl){ $("err").style.display="grid"; $("err").textContent="This instrument needs WebGL2. Try a current Chrome, Edge or Firefox."; throw new Error("no webgl2"); }
+
+/* ------------------------------------------------------------------ *
+ *  SIMULATION — particle-mesh gravity on a periodic grid
+ *  ∇²φ = ρ (mass fluctuation)   solved by red-black SOR, warm-started
+ *  a = -gravity · ∇φ            leapfrog-ish symplectic step + cooling
+ * ------------------------------------------------------------------ */
+const G=40, G2=G*G, G3=G*G*G;          // grid
+const NMAX=16000;                       // particle budget
+const wrap=i=>((i%G)+G)%G;
+const gidx=(i,j,k)=>wrap(i)+G*wrap(j)+G2*wrap(k);
+
+// particle state
+const px=new Float32Array(NMAX), py=new Float32Array(NMAX), pz=new Float32Array(NMAX);
+const vx=new Float32Array(NMAX), vy=new Float32Array(NMAX), vz=new Float32Array(NMAX);
+const pm=new Float32Array(NMAX), spec=new Int32Array(NMAX);
+let N=0, writeHead=0;
+
+// fields
+const rho=new Float32Array(G3), rho2=new Float32Array(G3);
+const phi=new Float32Array(G3);                       // warm-started across frames
+const ax=new Float32Array(G3), ay=new Float32Array(G3), az=new Float32Array(G3);
+
+// params (wired to sliders)
+const P={ infall:1.5, gravity:3.0, cooling:0.12, softening:3 };
+const DT=0.06, OMEGA=1.7, SWEEPS=6, GRAV_K=0.9;
+
+function addParticle(x,y,z,m){
+  const i = N<NMAX ? N++ : (writeHead=(writeHead+1)%NMAX, writeHead);
+  px[i]=x; py[i]=y; pz[i]=z; vx[i]=0; vy[i]=0; vz[i]=0; pm[i]=m; spec[i]=-1;
+}
+function resetField(){
+  N=0; writeHead=0; phi.fill(0);
+  // faint uniform haze so gravity has something to sculpt immediately
+  for(let n=0;n<2500;n++){
+    addParticle(Math.random()*G,Math.random()*G,Math.random()*G, 0.6+Math.random()*0.5);
+  }
+}
+
+// cloud-in-cell deposit of mass -> rho
+function deposit(){
+  rho.fill(0);
+  for(let n=0;n<N;n++){
+    const x=px[n],y=py[n],z=pz[n],m=pm[n];
+    const i0=Math.floor(x),j0=Math.floor(y),k0=Math.floor(z);
+    const fx=x-i0,fy=y-j0,fz=z-k0, gx=1-fx,gy=1-fy,gz=1-fz;
+    rho[gidx(i0  ,j0  ,k0  )]+=m*gx*gy*gz;
+    rho[gidx(i0+1,j0  ,k0  )]+=m*fx*gy*gz;
+    rho[gidx(i0  ,j0+1,k0  )]+=m*gx*fy*gz;
+    rho[gidx(i0+1,j0+1,k0  )]+=m*fx*fy*gz;
+    rho[gidx(i0  ,j0  ,k0+1)]+=m*gx*gy*fz;
+    rho[gidx(i0+1,j0  ,k0+1)]+=m*fx*gy*fz;
+    rho[gidx(i0  ,j0+1,k0+1)]+=m*gx*fy*fz;
+    rho[gidx(i0+1,j0+1,k0+1)]+=m*fx*fy*fz;
+  }
+}
+
+// 6-neighbour box smoothing pass (periodic) — this is the "softening"
+function smooth(src,dst){
+  for(let k=0;k<G;k++)for(let j=0;j<G;j++)for(let i=0;i<G;i++){
+    const c=gidx(i,j,k);
+    dst[c]=(src[c]*2
+      +src[gidx(i+1,j,k)]+src[gidx(i-1,j,k)]
+      +src[gidx(i,j+1,k)]+src[gidx(i,j-1,k)]
+      +src[gidx(i,j,k+1)]+src[gidx(i,j,k-1)])/8;
+  }
+}
+
+// solve ∇²φ = ρ  (ρ mean-subtracted so it's solvable on the torus)
+function poisson(){
+  // softening = smoothing passes on the source
+  let src=rho, other=rho2, passes=P.softening|0;
+  for(let s=0;s<passes;s++){ smooth(src,other); const t=src; src=other; other=t; }
+  // subtract mean (only fluctuations source peculiar gravity)
+  let mean=0; for(let n=0;n<G3;n++) mean+=src[n]; mean/=G3;
+  for(let n=0;n<G3;n++) src[n]-=mean;
+  // red-black SOR, warm-started from previous frame's phi
+  for(let s=0;s<SWEEPS;s++){
+    for(let color=0;color<2;color++){
+      for(let k=0;k<G;k++)for(let j=0;j<G;j++){
+        let i0=((k+j+color)&1); // checkerboard start
+        for(let i=i0;i<G;i+=2){
+          const c=gidx(i,j,k);
+          const nb=phi[gidx(i+1,j,k)]+phi[gidx(i-1,j,k)]
+                  +phi[gidx(i,j+1,k)]+phi[gidx(i,j-1,k)]
+                  +phi[gidx(i,j,k+1)]+phi[gidx(i,j,k-1)];
+          const gs=(nb-src[c])/6;
+          phi[c]+=OMEGA*(gs-phi[c]);
+        }
+      }
+    }
+  }
+  // remove the constant nullspace so phi doesn't drift
+  let pm_=0; for(let n=0;n<G3;n++) pm_+=phi[n]; pm_/=G3;
+  for(let n=0;n<G3;n++) phi[n]-=pm_;
+}
+
+// grid acceleration a = -∇φ  (central diff, periodic)
+function gridAccel(){
+  for(let k=0;k<G;k++)for(let j=0;j<G;j++)for(let i=0;i<G;i++){
+    const c=gidx(i,j,k);
+    ax[c]=-(phi[gidx(i+1,j,k)]-phi[gidx(i-1,j,k)])*0.5;
+    ay[c]=-(phi[gidx(i,j+1,k)]-phi[gidx(i,j-1,k)])*0.5;
+    az[c]=-(phi[gidx(i,j,k+1)]-phi[gidx(i,j,k-1)])*0.5;
+  }
+}
+
+// gather force to particles (CIC) and integrate
+let energy=0;
+function integrate(){
+  const gk=GRAV_K*P.gravity, cool=1-P.cooling*DT;
+  let ke=0;
+  for(let n=0;n<N;n++){
+    const x=px[n],y=py[n],z=pz[n];
+    const i0=Math.floor(x),j0=Math.floor(y),k0=Math.floor(z);
+    const fx=x-i0,fy=y-j0,fz=z-k0, gx=1-fx,gy=1-fy,gz=1-fz;
+    const w000=gx*gy*gz,w100=fx*gy*gz,w010=gx*fy*gz,w110=fx*fy*gz,
+          w001=gx*gy*fz,w101=fx*gy*fz,w011=gx*fy*fz,w111=fx*fy*fz;
+    const c000=gidx(i0,j0,k0),c100=gidx(i0+1,j0,k0),c010=gidx(i0,j0+1,k0),c110=gidx(i0+1,j0+1,k0),
+          c001=gidx(i0,j0,k0+1),c101=gidx(i0+1,j0,k0+1),c011=gidx(i0,j0+1,k0+1),c111=gidx(i0+1,j0+1,k0+1);
+    let gxx=ax[c000]*w000+ax[c100]*w100+ax[c010]*w010+ax[c110]*w110+ax[c001]*w001+ax[c101]*w101+ax[c011]*w011+ax[c111]*w111;
+    let gyy=ay[c000]*w000+ay[c100]*w100+ay[c010]*w010+ay[c110]*w110+ay[c001]*w001+ay[c101]*w101+ay[c011]*w011+ay[c111]*w111;
+    let gzz=az[c000]*w000+az[c100]*w100+az[c010]*w010+az[c110]*w110+az[c001]*w001+az[c101]*w101+az[c011]*w011+az[c111]*w111;
+    let nvx=(vx[n]+gk*gxx*DT)*cool;
+    let nvy=(vy[n]+gk*gyy*DT)*cool;
+    let nvz=(vz[n]+gk*gzz*DT)*cool;
+    // clamp runaway
+    const sp=nvx*nvx+nvy*nvy+nvz*nvz, cap=9;
+    if(sp>cap){const s=Math.sqrt(cap/sp);nvx*=s;nvy*=s;nvz*=s;}
+    vx[n]=nvx; vy[n]=nvy; vz[n]=nvz;
+    px[n]=(x+nvx*DT+G)%G; py[n]=(y+nvy*DT+G)%G; pz[n]=(z+nvz*DT+G)%G;
+    ke+=sp;
+  }
+  energy = N? ke/N : 0;
+}
+
+/* ---- persistent species: connected clumps that survive ---- */
+const label=new Int32Array(G3);
+let prevClumps=[]; let nextSpecId=1;
+const HUES=new Map();
+function hueFor(id){
+  if(!HUES.has(id)){ HUES.set(id, (id*0.61803398875)%1); }
+  return HUES.get(id);
+}
+let cellSpec=new Int32Array(G3);
+function clusterSpecies(){
+  let mean=0; for(let n=0;n<G3;n++) mean+=rho[n]; mean/=G3;
+  const thr=mean*3.2;
+  label.fill(-1);
+  const comps=[]; const stack=[];
+  for(let start=0;start<G3;start++){
+    if(rho[start]<=thr||label[start]!==-1) continue;
+    const ci=comps.length; label[start]=ci; stack.length=0; stack.push(start);
+    let cnt=0, sx=0,sy=0,sz=0;
+    while(stack.length){
+      const c=stack.pop(); cnt++;
+      const i=c%G, j=((c/G)|0)%G, k=(c/G2)|0; sx+=i; sy+=j; sz+=k;
+      const nb=[gidx(i+1,j,k),gidx(i-1,j,k),gidx(i,j+1,k),gidx(i,j-1,k),gidx(i,j,k+1),gidx(i,j,k-1)];
+      for(const m of nb){ if(rho[m]>thr && label[m]===-1){ label[m]=ci; stack.push(m); } }
+    }
+    comps.push({cnt,cx:sx/cnt,cy:sy/cnt,cz:sz/cnt,id:0});
+  }
+  // survivors keep/earn a persistent id by centroid match to last frame
+  const table=new Int32Array(comps.length); const survivors=[];
+  for(let ci=0;ci<comps.length;ci++){
+    const c=comps[ci]; if(c.cnt<4) continue;
+    let best=-1,bd=6*6;
+    for(const p of prevClumps){
+      const dx=c.cx-p.cx,dy=c.cy-p.cy,dz=c.cz-p.cz,d=dx*dx+dy*dy+dz*dz;
+      if(d<bd){bd=d;best=p.id;}
+    }
+    c.id = best>=0? best : nextSpecId++;
+    table[ci]=c.id; survivors.push(c);
+  }
+  for(let n=0;n<G3;n++){ const L=label[n]; cellSpec[n]=L>=0?table[L]:0; }
+  prevClumps=survivors.map(c=>({cx:c.cx,cy:c.cy,cz:c.cz,id:c.id}));
+  return survivors.length;
+}
+
+// assign each particle a species by sampling cellSpec at its cell
+function paintParticles(){
+  for(let n=0;n<N;n++){
+    const c=gidx(px[n]|0,py[n]|0,pz[n]|0);
+    spec[n]=cellSpec[c];
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  LIGHT -> MASS  (webcam brightness, or procedural noise fallback)
+ * ------------------------------------------------------------------ */
+const vid=$("vid"), lc=document.createElement("canvas"); lc.width=48; lc.height=36;
+const lctx=lc.getContext("2d",{willReadFrequently:true});
+let camOn=false, camReady=false;
+let infallCount=0, infallRate=0, infallAcc=0, infallTimer=0;
+
+function seedNoise(dt){
+  // wandering bright blobs so it lives without a camera
+  const t=performance.now()*0.0004;
+  const budget=Math.floor(P.infall*40*dt);
+  for(let s=0;s<budget;s++){
+    const a=Math.random()*6.283, r=(0.5+0.5*Math.sin(t*1.3+s))*G*0.4;
+    const cx=G/2+Math.cos(t)*G*0.18, cy=G/2+Math.sin(t*0.7)*G*0.18, cz=G/2+Math.sin(t*1.1)*G*0.18;
+    addParticle(cx+Math.cos(a)*r*Math.random(), cy+Math.sin(a)*r*Math.random(), cz+(Math.random()-0.5)*G*0.5, 0.7+Math.random()*0.6);
+    infallCount++;
+  }
+}
+function seedCam(dt){
+  if(!camReady||vid.readyState<2){ seedNoise(dt); return; }
+  lctx.drawImage(vid,0,0,lc.width,lc.height);
+  const d=lctx.getImageData(0,0,lc.width,lc.height).data;
+  const budget=P.infall*300*dt;
+  for(let s=0;s<budget;s++){
+    const ix=(Math.random()*lc.width)|0, iy=(Math.random()*lc.height)|0, o=(iy*lc.width+ix)*4;
+    const b=(d[o]+d[o+1]+d[o+2])/765; // 0..1 brightness
+    if(b>0.55 && Math.random()<b){
+      // map image plane into the box, brightness -> depth spread
+      const x=(ix/lc.width)*G, y=(1-iy/lc.height)*G, z=G/2+(Math.random()-0.5)*G*(0.3+b*0.5);
+      addParticle(x,y,z, 0.5+b*1.1);
+      infallCount++;
+    }
+  }
+}
+async function startCam(){
+  try{
+    const st=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480,facingMode:"user"}});
+    vid.srcObject=st; await vid.play(); camOn=true; camReady=true;
+    $("cam").classList.remove("off"); $("camLbl").textContent="webcam live";
+    $("bCam").classList.add("on"); $("bCam").textContent="STOP WEBCAM";
+  }catch(e){
+    camOn=false; $("camLbl").textContent="camera blocked — seeding from noise";
+  }
+}
+function stopCam(){
+  camOn=false; camReady=false;
+  if(vid.srcObject){ vid.srcObject.getTracks().forEach(t=>t.stop()); vid.srcObject=null; }
+  $("cam").classList.add("off"); $("camLbl").textContent="no camera — seeding from noise";
+  $("bCam").classList.remove("on"); $("bCam").textContent="USE WEBCAM";
+}
+
+/* ------------------------------------------------------------------ *
+ *  RENDER — WebGL2 points, additive glow, orbit camera
+ * ------------------------------------------------------------------ */
+const VERT=`#version 300 es
+layout(location=0) in vec3 aPos;
+layout(location=1) in vec3 aCol;
+uniform mat4 uMVP; uniform float uScale;
+out vec3 vc;
+void main(){
+  vc=aCol;
+  gl_Position=uMVP*vec4(aPos,1.0);
+  float d=max(gl_Position.w,0.001);
+  gl_PointSize=clamp(uScale/d, 1.5, 22.0);
+}`;
+const FRAG=`#version 300 es
+precision highp float;
+in vec3 vc; out vec4 O;
+void main(){
+  vec2 p=gl_PointCoord*2.0-1.0;
+  float r=dot(p,p);
+  if(r>1.0) discard;
+  float a=exp(-r*2.6);
+  O=vec4(vc*a, a);
+}`;
+function shader(t,s){const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);
+  if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(o);return o;}
+const prog=gl.createProgram();
+gl.attachShader(prog,shader(gl.VERTEX_SHADER,VERT));
+gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,FRAG));
+gl.linkProgram(prog);
+if(!gl.getProgramParameter(prog,gl.LINK_STATUS)) throw gl.getProgramInfoLog(prog);
+gl.useProgram(prog);
+const uMVP=gl.getUniformLocation(prog,"uMVP"), uScale=gl.getUniformLocation(prog,"uScale");
+const vao=gl.createVertexArray(); gl.bindVertexArray(vao);
+const buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+const interleave=new Float32Array(NMAX*6);
+gl.bufferData(gl.ARRAY_BUFFER,interleave.byteLength,gl.DYNAMIC_DRAW);
+gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,3,gl.FLOAT,false,24,0);
+gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1,3,gl.FLOAT,false,24,12);
+
+// hsv->rgb
+function hsv(h,s,v){ const i=Math.floor(h*6),f=h*6-i,p=v*(1-s),q=v*(1-f*s),t=v*(1-(1-f)*s);
+  switch(i%6){case 0:return[v,t,p];case 1:return[q,v,p];case 2:return[p,v,t];
+  case 3:return[p,q,v];case 4:return[t,p,v];default:return[v,p,q];} }
+
+function buildBuffer(){
+  for(let n=0;n<N;n++){
+    const o=n*6;
+    interleave[o]=px[n]; interleave[o+1]=py[n]; interleave[o+2]=pz[n];
+    let r,g,b;
+    if(spec[n]>0){ const [rr,gg,bb]=hsv(hueFor(spec[n]),0.65,1.0); r=rr;g=gg;b=bb; }
+    else { r=0.62;g=0.55;b=0.30; } // unbound gas: dim amber
+    interleave[o+3]=r; interleave[o+4]=g; interleave[o+5]=b;
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferSubData(gl.ARRAY_BUFFER,0,interleave.subarray(0,N*6));
+}
+
+// --- tiny mat4 ---
+function perspective(fov,asp,near,far){const f=1/Math.tan(fov/2),nf=1/(near-far);
+  return [f/asp,0,0,0, 0,f,0,0, 0,0,(far+near)*nf,-1, 0,0,2*far*near*nf,0];}
+function lookAt(e,c,u){
+  let zx=e[0]-c[0],zy=e[1]-c[1],zz=e[2]-c[2];let zl=Math.hypot(zx,zy,zz);zx/=zl;zy/=zl;zz/=zl;
+  let xx=u[1]*zz-u[2]*zy,xy=u[2]*zx-u[0]*zz,xz=u[0]*zy-u[1]*zx;let xl=Math.hypot(xx,xy,xz)||1;xx/=xl;xy/=xl;xz/=xl;
+  let yx=zy*xz-zz*xy,yy=zz*xx-zx*xz,yz=zx*xy-zy*xx;
+  return [xx,yx,zx,0, xy,yy,zy,0, xz,yz,zz,0,
+    -(xx*e[0]+xy*e[1]+xz*e[2]),-(yx*e[0]+yy*e[1]+yz*e[2]),-(zx*e[0]+zy*e[1]+zz*e[2]),1];}
+function mul(a,b){const o=new Array(16);for(let r=0;r<4;r++)for(let c=0;c<4;c++){
+  o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];}return o;}
+
+// camera orbit
+const cam={theta:0.6,phi:0.5,rad:G*1.9,auto:true};
+let drag=false,lx=0,ly=0;
+cv.addEventListener("pointerdown",e=>{drag=true;lx=e.clientX;ly=e.clientY;cam.auto=false;cv.setPointerCapture(e.pointerId);});
+cv.addEventListener("pointerup",()=>drag=false);
+cv.addEventListener("pointermove",e=>{if(!drag)return;cam.theta-=(e.clientX-lx)*0.006;cam.phi-=(e.clientY-ly)*0.006;
+  cam.phi=Math.max(0.08,Math.min(Math.PI-0.08,cam.phi));lx=e.clientX;ly=e.clientY;});
+cv.addEventListener("wheel",e=>{e.preventDefault();cam.rad*=(1+Math.sign(e.deltaY)*0.08);
+  cam.rad=Math.max(G*0.7,Math.min(G*4,cam.rad));},{passive:false});
+
+function resize(){const dpr=Math.min(devicePixelRatio||1,2);
+  cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;gl.viewport(0,0,cv.width,cv.height);}
+addEventListener("resize",resize); resize();
+
+/* ------------------------------------------------------------------ *
+ *  MAIN LOOP
+ * ------------------------------------------------------------------ */
+let frame=0, last=performance.now(), fpsSmoothed=60, acc=0;
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05); last=now;
+  fpsSmoothed=fpsSmoothed*0.92+(1/Math.max(dt,1e-3))*0.08;
+
+  // seed light -> mass
+  (camOn?seedCam:seedNoise)(dt);
+  // infall rate readout (per second)
+  infallTimer+=dt; if(infallTimer>=0.25){ infallRate=Math.round(infallCount/infallTimer); infallCount=0; infallTimer=0; }
+
+  // physics
+  deposit();
+  poisson();
+  gridAccel();
+  integrate();
+
+  // species every 12 frames
+  if((frame%12)===0){ const nc=clusterSpecies(); paintParticles(); $("mSpecies").textContent=nc; }
+
+  // camera
+  if(cam.auto) cam.theta+=dt*0.12;
+  const cx=G/2,cy=G/2,cz=G/2;
+  const eye=[cx+cam.rad*Math.sin(cam.phi)*Math.cos(cam.theta),
+             cy+cam.rad*Math.cos(cam.phi),
+             cz+cam.rad*Math.sin(cam.phi)*Math.sin(cam.theta)];
+  const proj=perspective(1.05,cv.width/cv.height,0.1,G*10);
+  const view=lookAt(eye,[cx,cy,cz],[0,1,0]);
+  gl.uniformMatrix4fv(uMVP,false,mul(proj,view));
+  gl.uniform1f(uScale, cv.height*0.010);
+
+  // draw
+  buildBuffer();
+  gl.clearColor(0.02,0.027,0.047,1); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE); gl.depthMask(false);
+  gl.bindVertexArray(vao);
+  gl.drawArrays(gl.POINTS,0,N);
+
+  // hud
+  $("mEnergy").textContent=energy.toFixed(2);
+  $("mMatter").textContent=N;
+  $("mInfall").textContent=infallRate;
+  $("fps").textContent=Math.round(fpsSmoothed)+" FPS";
+
+  frame++;
+  requestAnimationFrame(loop);
+}
+
+// wire controls
+function bind(id,key,fmt){const s=$(id);const out=$("v"+id.slice(1));
+  s.oninput=()=>{P[key]=parseFloat(s.value); out.textContent=fmt(P[key]);};}
+bind("sInfall","infall",v=>v.toFixed(2));
+bind("sGrav","gravity",v=>v.toFixed(2));
+bind("sCool","cooling",v=>v.toFixed(3));
+bind("sSoft","softening",v=>v.toFixed(1));
+$("bCam").onclick=()=>{ camOn?stopCam():startCam(); };
+$("bReset").onclick=()=>{ resetField(); prevClumps=[]; nextSpecId=1; HUES.clear(); };
+
+resetField();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
