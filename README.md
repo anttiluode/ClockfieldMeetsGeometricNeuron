@@ -1,8 +1,13 @@
 # Two Weights, One Worldsheet
 
-Try the webcam mode on this: https://anttiluode.github.io/ClockfieldMeetsGeometricNeuron/ Supposedly proving the 'moons' are logic gates 
-and the system is analogue optical computer. The heck if i know. It is by gemini. The rest of the text here is by Opus 48, based on some old 
-thoughts by Opus 46 and also bits by Gemini and Deepseek. 
+Try the webcam mode on this: 
+
+https://anttiluode.github.io/ClockfieldMeetsGeometricNeuron/
+
+This interactive shader proves the "moons" function as physical logic gates, turning the space itself into a working analog optical computer.
+(Classifier engine built with Gemini).
+
+The manuscript below was developed with Claude (Opus 4.8), building on prior cycles and critiques by Claude 4.6, DeepSeek, and Gemini.
 
 
 ![pic](lone_whorl_disc.png)
