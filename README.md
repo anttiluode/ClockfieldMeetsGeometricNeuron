@@ -4,6 +4,7 @@ Try the webcam mode on this: https://anttiluode.github.io/ClockfieldMeetsGeometr
 and the system is analogue optical computer. The heck if i know. It is by gemini. The rest of the text here is by Opus 48, based on some old 
 thoughts by Opus 46 and also bits by Gemini and Deepseek. 
 
+
 ![pic](lone_whorl_disc.png)
 
 ## A Kähler unification of the Geometric Neuron and the Clockfield: geometry, memory, and the topology that decided it
