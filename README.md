@@ -1,5 +1,7 @@
 # Two Weights, One Worldsheet
 
+![pic](lone_whorl_disc.png)
+
 ## A Kähler unification of the Geometric Neuron and the Clockfield: geometry, memory, and the topology that decided it
 
 *PerceptionLab / Antti Luode, with Claude (Opus 4.8), and in dialogue with Gemini. Helsinki, June 2026.*
