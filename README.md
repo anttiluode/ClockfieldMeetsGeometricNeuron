@@ -1,2 +1,0 @@
-# ClockfieldMeetsGeometricNeuron
-Unification. :D
