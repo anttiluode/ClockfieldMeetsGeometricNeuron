@@ -1,5 +1,9 @@
 # Two Weights, One Worldsheet
 
+EDIT: The clockfield in the end is sort of like Voloviks universe in a helium droplet. 
+
+EDIT: Added a weird code where light from webcam creates 3d matter 'Genesis 3d.html' 
+
 Try the webcam mode on this: 
 
 https://anttiluode.github.io/ClockfieldMeetsGeometricNeuron/
