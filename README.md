@@ -1,5 +1,9 @@
 # Two Weights, One Worldsheet
 
+Try the webcam mode on this: https://anttiluode.github.io/ClockfieldMeetsGeometricNeuron/ Supposedly proving the 'moons' are logic gates 
+and the system is analogue optical computer. The heck if i know. It is by gemini. The rest of the text here is by Opus 48, based on some old 
+thoughts by Opus 46 and also bits by Gemini and Deepseek. 
+
 ![pic](lone_whorl_disc.png)
 
 ## A Kähler unification of the Geometric Neuron and the Clockfield: geometry, memory, and the topology that decided it
@@ -21,6 +25,8 @@ We then ask whether the required weight is physically admissible by testing whet
 The final experiment identifies why the verdict kept moving: **the torus was the confound.** All the pinning tests were run on a periodic domain, where total winding is identically zero, so every whorl must appear in a `±` pair that mutually annihilates — an annihilation channel absent from the actual systems (a brain region and the Rajapinta box are *bounded*, not periodic). Repeating the test on a bounded disc with a winding-`1` boundary — one topologically-forced whorl, no annihilation partner — the whorl **survives under the unification weight with a clean core and pins to an off-center well**, no cooling required, at lower fidelity than baseline but clearly held off the symmetric center. The same periodic topology had also forced the net charge to zero in a prior (March) attempt at the Atiyah–Singer index test; on the bounded domain the charge reads `+1`, correctly. The corrected verdict: the memory obstruction was largely an artifact of the torus; on the topology the actual systems inhabit, a lone pinned whorl is a viable — if imprecise — memory under the unification weight, with the Dirac-*operator* index (via an overlap construction) the one rigorous computation still unrun. The Kähler *geometry* is measured and real throughout; the claim that the held field is *experienced* is untouched by any of it, as it always has been.
 
 ---
+
+![pic](pic.png)
 
 ## 1. Two objects, one question
 
